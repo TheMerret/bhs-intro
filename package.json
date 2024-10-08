@@ -1,6 +1,7 @@
 {
   "scripts": {
     "p1": "tsc ./part1/index.ts && node ./part1/index.js",
+    "p2": "tsc ./part2/index.ts && node ./part2/index.js",
     "test": "vitest"
   },
   "devDependencies": {
