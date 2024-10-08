@@ -1,48 +1,54 @@
-type Listener<T extends any[] = any[]> = (...args: T) => void;
+export type Listener<T = any> = (...args: T[]) => void;
 
-export default class EventEmitter<Params extends Parameters<Listener>, Events extends Record<string, Params>> {
-  private events: Events = {};
+export type DefaultEventMap = {
+    [event: string]: Listener<any>;
+};
 
-  // Subscribe to an event with a listener (returns this for chaining)
-  subscribe<K extends keyof Events, P extends Params>(
-    event: K,
-    listener: Listener<P>
-  ): this {
-    if (!this.events[event]) {
-      this.events[event] = [];
-    }
-    this.events[event]!.push(listener);
-    return this;
-  }
+export interface IEventEmitter<EventMap extends DefaultEventMap = DefaultEventMap> {
+    subscribe<EventKey extends keyof EventMap>(
+        event: EventKey,
+        listener: EventMap[EventKey]
+    ): this;
 
-  // Unsubscribe a listener from an event (returns this for chaining)
-  unsubscribe<K extends keyof Events>(
-    event: K,
-    listener: Listener<Events[K]>
-  ): this {
-    if (!this.events[event]) return this;
+    unsubscribe<EventKey extends keyof EventMap>(
+        event: EventKey,
+        listener: EventMap[EventKey]
+    ): this;
 
-    this.events[event] = this.events[event]!.filter((l) => l !== listener);
-    return this;
-  }
-
-  // Trigger all listeners for a specific event (returns this for chaining)
-  emit<K extends keyof Events, >(event: K, ...args: Events[K]): this {
-    if (!this.events[event]) return this;
-
-    this.events[event]!.forEach((listener) => listener(...args));
-    return this;
-  }
+    emit<EventKey extends keyof EventMap>(
+        event: EventKey,
+        ...args: Parameters<EventMap[EventKey]>
+    ): void;
 }
 
-const emitter = new EventEmitter();
+export default class EventEmitter<EventMap extends DefaultEventMap = DefaultEventMap> implements IEventEmitter<EventMap> {
+    private events: { [K in keyof EventMap]?: EventMap[K][] } = {};
 
-// Chainable method calls using builder pattern
-emitter
-  .subscribe("test", (message: number) => {
-    console.log("Test event:", message);
-  })
-  .emit("test", "Hello, TypeScript!")
-  .unsubscribe("test", (message) => {
-    console.log("Test event:", message);
-  });
+    subscribe<EventKey extends keyof EventMap>(
+        event: EventKey,
+        listener: EventMap[EventKey]
+    ): this {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event]!.push(listener);
+        return this;
+    }
+
+    unsubscribe<EventKey extends keyof EventMap>(
+        event: EventKey,
+        listener: EventMap[EventKey]
+    ): this {
+        if (!this.events[event]) return this;
+        this.events[event] = this.events[event]!.filter(l => l !== listener);
+        return this;
+    }
+
+    emit<EventKey extends keyof EventMap>(
+        event: EventKey,
+        ...args: Parameters<EventMap[EventKey]>
+    ): void {
+        if (!this.events[event]) return;
+        this.events[event]!.forEach(listener => listener(...args));
+    }
+}

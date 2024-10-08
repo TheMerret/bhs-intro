@@ -31,18 +31,13 @@ test("emits with args", () => {
   const consoleMock = vi.spyOn(console, "log");
 
   const eventEmitter = new EventEmitter<{
-    event1: [string, null]
+    event1: (a: string, b: null) => void
   }>();
-  function f1(n: number) {
-    console.log(`hello ${n}`);
-  }
   function f2(a: string, b: null) {
     console.log(`world ${a} ${b}`);
   }
   eventEmitter
-    .subscribe("event1", f1)
     .subscribe("event1", f2)
-    .emit("event1", '', null);
-  expect(consoleMock).toHaveBeenCalledWith("hello 1");
+    .emit("event1", 's', null);
   expect(consoleMock).toHaveBeenLastCalledWith("world s null");
 });
